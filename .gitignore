@@ -1,0 +1,4 @@
+ICX360/
+venv/
+__pycache__/
+*.pyc

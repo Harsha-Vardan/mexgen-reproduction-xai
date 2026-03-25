@@ -1,149 +1,156 @@
 # MExGen Reproduction for Explainable AI (XAI)
 
-## 📌 Project Overview
+## Project Overview
 
-This project reproduces and implements the core ideas of the **MExGen (Multi-level Explanations for Generative Models)** framework.
+This repository reproduces and implements the core ideas of the MExGen
+(Multi-level Explanations for Generative Models) framework.
 
-The goal is to explain **why a Large Language Model (LLM)** generates a particular output by identifying **which parts of the input context influence the response the most**.
+The goal is to explain why a Large Language Model (LLM) generates a
+particular output by identifying which parts of the input context influence
+the response most.
 
----
+## Problem Statement
 
-## ❗ Problem Statement
+Traditional Explainable AI methods such as LIME and SHAP are designed for
+models with scalar outputs. They are not directly suitable for generative
+models because:
 
-Traditional Explainable AI methods like **LIME** and **SHAP** work well for models with **scalar outputs**, but fail for **generative models** because:
+- LLMs produce long textual outputs.
+- There is no direct scalar output to attribute.
+- Input context can be very large.
 
-- LLMs produce **long textual outputs**
-- There is **no direct scalar output**
-- Input context can be **very large**
+## Approach (MExGen)
 
----
+### 1. Scalarization Using Similarity
 
-## 💡 Our Approach (MExGen)
+Text outputs are converted into scalar values using BERTScore:
 
-We solve this using the MExGen framework:
+- Compare original output with perturbed outputs.
+- Generate a similarity score.
 
-### 🔹 1. Scalarization using Similarity
-We convert text outputs into scalar values using **BERTScore**:
-- Compare original output with perturbed outputs
-- Generate a similarity score
+### 2. Perturbation-Based Explanation
 
-### 🔹 2. Perturbation-based Explanation
-- Remove one sentence at a time from input
-- Observe how output changes
-- Measure importance using:
+- Remove one sentence at a time from the input.
+- Observe how the output changes.
+- Measure sentence importance using:
 
-`Importance = 1 - similarity`
+`importance = 1 - similarity`
 
-### 🔹 3. Multi-Level Explanation (Concept)
-- Coarse level → paragraph
-- Fine level → sentence (implemented)
-- Future extension → word level
+### 3. Multi-Level Explanation (Concept)
 
----
+- Coarse level: paragraph
+- Fine level: sentence (implemented)
+- Future extension: word level
 
-## 🔄 Workflow
+## Workflow
 
-1. Input document + query  
-2. Generate output using LLM (FLAN-T5)  
-3. Create perturbed inputs (remove sentences)  
-4. Generate new outputs  
-5. Compute similarity scores (BERTScore)  
-6. Calculate importance values  
-7. Rank sentences based on importance  
-8. Evaluate using faithfulness and cost  
-9. Visualize importance  
+1. Input document and query
+2. Generate output using FLAN-T5
+3. Create perturbed inputs (remove one sentence at a time)
+4. Generate new outputs for each perturbation
+5. Compute similarity scores (BERTScore)
+6. Calculate importance values
+7. Rank sentences by importance
+8. Evaluate explanation quality using faithfulness and cost
+9. Visualize importance
 
----
+## Key Idea
 
-## 🧠 Key Idea
+If removing a part of the input significantly changes the output, that part is
+important.
 
-> If removing a part of the input significantly changes the output, that part is important.
-
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 - Python
 - PyTorch
 - Hugging Face Transformers
-- FLAN-T5 (LLM)
+- FLAN-T5
 - BERTScore
 - Matplotlib
 - NLTK
 
----
+## Project Structure
 
-## 📂 Project Structure
+```text
 mexgen-reproduction-xai/
-│
-├── experiments/
-│ ├── data_loader.py
-│ ├── test_explainer.py
-│ ├── evaluation.py
-│ ├── visualize.py
-│
-├── mexgen/
-│ ├── explainer.py
-│ ├── perturbation.py
-│ ├── scalarizer.py
-│
-├── models/
-│ ├── flan_t5.py
-│
-├── README.md
-└── requirements.txt
+|-- experiments/
+|   |-- data_loader.py
+|   |-- test_explainer.py
+|   |-- evaluation.py
+|   `-- visualize.py
+|-- mexgen/
+|   |-- explainer.py
+|   |-- perturbation.py
+|   `-- scalarizer.py
+|-- models/
+|   `-- flan_t5.py
+|-- README.md
+`-- requirements.txt
+```
 
+## Setup Instructions
 
----
+1. Clone the repository.
 
-## ⚙️ Setup Instructions
-
-### 1. Clone Repository
 ```bash
 git clone https://github.com/Harsha-Vardan/mexgen-reproduction-xai.git
 cd mexgen-reproduction-xai
-2. Install Dependencies
+```
+
+2. Install dependencies.
+
+```bash
 pip install -r requirements.txt
-3. Run the Project
+```
+
+3. Run the pipeline.
+
+```bash
 python -m experiments.test_explainer
-🔍 What the Code Does
+```
 
-For each input sample:
+## What the Code Does
 
-Generate original output using FLAN-T5
-Remove each sentence one by one
-Generate new outputs
-Compute similarity using BERTScore
-Calculate importance scores
-Rank sentences
-Evaluate explanation:
-Faithfulness
-Cost
-Visualize importance
-📊 Evaluation Metrics
-🔹 Faithfulness
+For each input sample, the pipeline:
 
-Measures how much output changes when important input is removed:
+- Generates an original output using FLAN-T5.
+- Removes each sentence one by one.
+- Regenerates outputs for perturbed inputs.
+- Computes similarity with BERTScore.
+- Calculates and ranks importance scores.
+- Evaluates explanations with faithfulness and cost.
+- Produces visualizations.
 
-Faithfulness = 1 - similarity
+## Evaluation Metrics
 
-Higher value → better explanation
+### Faithfulness
 
-🔹 Cost
+Measures how much the output changes when important input is removed:
 
-Measures computational expense:
+`faithfulness = 1 - similarity`
 
-Cost = 1 + number of sentences
+Higher values indicate stronger attribution effects.
 
-📊 Results Summary
-Metric	Value (Typical)
-Top Importance	~0.10
-Faithfulness	~0.10
-Cost	~20–25 model calls
+### Cost
 
-👉 These results indicate that the model relies on distributed contextual information, and removing individual sentences leads to moderate changes in output.
+Measures computational effort:
 
-🧪 Example Explanation Output
+`cost = 1 + number_of_sentences`
+
+## Typical Results
+
+| Metric         | Typical Value      |
+| -------------- | ------------------ |
+| Top importance | ~0.10              |
+| Faithfulness   | ~0.10              |
+| Cost           | ~20-25 model calls |
+
+These results suggest the model relies on distributed contextual information,
+so removing single sentences causes moderate changes rather than drastic shifts.
+
+## Example Explanation Output
+
+```text
 Sentence 4
 Raw Importance: 0.1041
 Normalized Importance: 1.0000
@@ -153,51 +160,57 @@ Sentence 5
 Raw Importance: 0.1022
 Normalized Importance: 0.9816
 "The waters breached a retaining wall..."
-📈 Visualization
-🔹 Sentence Importance Graph
+```
 
-🔹 Faithfulness vs Cost
+## Visualizations
 
-(Add screenshots in the assets/ folder)
+- Sentence importance graph
+- Faithfulness vs. cost graph
 
-🧠 Key Observations
-The model relies on distributed context
-No single sentence dominates output
-Some irrelevant sentences receive importance due to semantic overlap
-Faithfulness scores indicate robust summarization behavior
-🔬 Extension (Our Contribution)
+You can add generated screenshots to an assets folder and reference them here.
 
-We extend the MExGen framework to explore its applicability in:
+## Key Observations
 
-Offline RAG (Retrieval-Augmented Generation) systems
-Language-based generative tasks
-Evaluating whether explanation fidelity holds in long-context settings
+- The model relies on distributed context.
+- No single sentence dominates output generation.
+- Some semantically overlapping sentences can receive non-trivial importance.
+- Faithfulness values suggest robust summarization behavior.
 
-🚀 Contributions
-Implemented full MExGen pipeline
-Adapted LIME/SHAP ideas to generative models
-Built sentence-level explanation system
-Added normalization and visualization
-Evaluated using faithfulness and cost
-Extended to multi-sample evaluation
+## Extension (Contribution)
 
-🔮 Future Work
-Paragraph-level hierarchical refinement
-Word-level explanations
-Real-time explanation dashboards
-Integration with production LLM systems
+This reproduction extends MExGen exploration to:
 
-🧾 Reproducibility
-Random Seed: 42
-Dataset: XSUM (Hugging Face)
+- Offline RAG (Retrieval-Augmented Generation) settings
+- Language-focused generative tasks
+- Long-context scenarios where explanation fidelity may degrade
 
-👨‍💻 Author
+## Contributions
+
+- Implemented the full MExGen pipeline
+- Adapted LIME/SHAP-style ideas to generative models
+- Built sentence-level explanation workflow
+- Added normalization and visualization
+- Evaluated with faithfulness and cost
+- Extended to multi-sample analysis
+
+## Future Work
+
+- Paragraph-level hierarchical refinement
+- Word-level explanation granularity
+- Real-time explanation dashboards
+- Integration with production LLM systems
+
+## Reproducibility
+
+- Random seed: 42
+- Dataset: XSUM (Hugging Face)
+
+## Author
+
 Harsha Vardan
 
-📌 Conclusion
+## Conclusion
 
-This project demonstrates how explainability can be extended to generative language models by transforming textual outputs into scalar similarity scores and analyzing the influence of input components using perturbation-based techniques.
-
-
----
-
+This project demonstrates how explainability can be extended to generative
+language models by converting textual outputs into scalar similarity scores and
+using perturbation-based analysis to estimate the influence of each input part.

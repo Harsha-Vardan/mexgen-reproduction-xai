@@ -1,5 +1,17 @@
 import matplotlib.pyplot as plt
 
+def plot_faithfulness_vs_cost(cost, faithfulness):
+    import matplotlib.pyplot as plt
+
+    plt.figure()
+    plt.scatter(cost, faithfulness)
+
+    plt.xlabel("Cost")
+    plt.ylabel("Faithfulness")
+    plt.title("Faithfulness vs Cost")
+
+    plt.show()
+    
 def plot_importance(scores):
     """
     Plot normalized importance scores
